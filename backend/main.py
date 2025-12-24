@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 
+if not MONGO_URI:
+    raise ValueError("MONGO_URI not found in .env file")
+
 # App Initialization 
 app = FastAPI(title="Heart Disease Prediction API")
 
@@ -58,7 +61,7 @@ def verify_api_key(api_key: str):
 # Prediction Endpoint
 # ----------------------------------
 @app.post("/predict")
-def predict(data: HeartInput, api_key: str = Header(...)):
+def predict(data: HeartInput, api_key: str = Header(...,alias= "api-key")):
     verify_api_key(api_key)
 
     # Prepare input for model (all 13 features)
