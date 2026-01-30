@@ -1,17 +1,13 @@
 {
   "functions": {
-    "api/*.py": {
-      "runtime": "@vercel/python@4.0.0"
+    "api/index.py": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/index.py"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/web_frontend/$1"
     }
   ]
 }
