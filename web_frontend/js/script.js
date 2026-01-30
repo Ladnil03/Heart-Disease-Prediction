@@ -1,7 +1,7 @@
 // Configuration
 const API_CONFIG = {
-    baseURL: 'http://127.0.0.1:8000',
-    apiKey: 'Heart_disease_api'
+    baseURL: window.location.origin,
+    apiKey: 'Heart_disease_api.'
 };
 
 // DOM Elements
@@ -89,7 +89,7 @@ function validateFormData(data) {
 
 // Make prediction API call
 async function makePrediction(data) {
-    const response = await fetch(`${API_CONFIG.baseURL}/predict`, {
+    const response = await fetch(`${API_CONFIG.baseURL}/api/predict`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -283,13 +283,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // Test API connection
 async function testAPIConnection() {
     try {
-        const response = await fetch(`${API_CONFIG.baseURL}/docs`, {
-            method: 'GET',
-            mode: 'no-cors'
+        const response = await fetch(`${API_CONFIG.baseURL}/api/`, {
+            method: 'GET'
         });
         console.log('API connection test completed');
     } catch (error) {
         console.warn('API connection test failed:', error.message);
-        showError('Backend API is not running. Please start the FastAPI server.');
     }
 }
