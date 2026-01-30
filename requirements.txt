@@ -2,12 +2,9 @@ fastapi
 uvicorn
 pydantic
 pymongo
-python-dotenv
 joblib
 numpy
 scikit-learn
 xgboost
+python-dotenv
 pandas
-streamlit
-requests
-plotly

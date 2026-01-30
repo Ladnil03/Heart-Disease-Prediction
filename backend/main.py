@@ -19,7 +19,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 API_KEY_VALUE = os.getenv("API_KEY", "Heart_disease_api")
 
 if not MONGO_URI:
-    raise ValueError("MONGO_URI not found in .env file")
+    logger.warning("MONGO_URI not found in .env file. Database features will be disabled.")
+    MONGO_URI = None
 
 # App Initialization 
 app = FastAPI(title="Heart Disease Prediction API")
@@ -62,15 +63,16 @@ def get_db_connection():
             client.close()
 
 # Initialize API key in database
-try:
-    with get_db_connection() as db:
-        api_keys_col = db["api_keys"]
-        # amazonq-ignore-next-line
-        if api_keys_col.count_documents({"api_key": API_KEY_VALUE}) == 0:
-            api_keys_col.insert_one({"api_key": API_KEY_VALUE})
-            logger.info("API key initialized in database")
-except Exception as e:
-    logger.warning(f"Could not initialize API key: {str(e)}")
+if MONGO_URI:
+    try:
+        with get_db_connection() as db:
+            api_keys_col = db["api_keys"]
+            # amazonq-ignore-next-line
+            if api_keys_col.count_documents({"api_key": API_KEY_VALUE}) == 0:
+                api_keys_col.insert_one({"api_key": API_KEY_VALUE})
+                logger.info("API key initialized in database")
+    except Exception as e:
+        logger.warning(f"Could not initialize API key: {str(e)}")
 
 # ----------------------------------
 # Request Schema with validation
@@ -94,6 +96,12 @@ class HeartInput(BaseModel):
 # API Key Validation with error handling
 # ----------------------------------
 def verify_api_key(api_key: str):
+    if not MONGO_URI:
+        # Skip database verification if no MongoDB connection
+        if api_key != API_KEY_VALUE:
+            raise HTTPException(status_code=401, detail="Invalid API Key")
+        return
+    
     try:
         with get_db_connection() as db:
             api_keys_col = db["api_keys"]
@@ -134,18 +142,19 @@ def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
             risk_level = "High"
 
         # Save to MongoDB Atlas using context manager and improved data mapping
-        try:
-            with get_db_connection() as db:
-                predictions_col = db["predictions"]
-                prediction_data = {
-                    **data.dict(),
-                    "risk_probability": float(risk_prob),
-                    "risk_level": risk_level
-                }
-                predictions_col.insert_one(prediction_data)
-        except Exception as e:
-            logger.error(f"Error saving prediction to database: {str(e)}")
-            # Continue execution even if database save fails
+        if MONGO_URI:
+            try:
+                with get_db_connection() as db:
+                    predictions_col = db["predictions"]
+                    prediction_data = {
+                        **data.dict(),
+                        "risk_probability": float(risk_prob),
+                        "risk_level": risk_level
+                    }
+                    predictions_col.insert_one(prediction_data)
+            except Exception as e:
+                logger.error(f"Error saving prediction to database: {str(e)}")
+                # Continue execution even if database save fails
 
         return {
             "risk_probability": round(float(risk_prob), 2),
