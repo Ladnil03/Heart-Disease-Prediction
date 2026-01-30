@@ -1,18 +1,17 @@
 {
   "functions": {
-    "api/index.py": {
+    "api/*.py": {
       "runtime": "@vercel/python@4.0.0"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "/web_frontend/$1"
+      "source": "/(.*)",
+      "destination": "/web_frontend/$1"
     }
-  ],
-  "outputDirectory": "web_frontend"
+  ]
 }
