@@ -8,7 +8,7 @@
 
 ### 2. FastAPI Runtime Error
 - **Problem**: Invalid runtime version specification in vercel.json
-- **Solution**: Updated to use `@vercel/python@4.0.0` runtime
+- **Solution**: Updated to use `vercel-python@3.9` runtime (correct format)
 
 ## Deployment Steps
 
@@ -51,7 +51,7 @@
 ## Vercel Configuration
 
 The `vercel.json` file configures:
-- Python runtime: `@vercel/python@4.0.0`
+- Python runtime: `vercel-python@3.9`
 - API routing: `/api/*` → `api/index.py`
 - Frontend routing: `/*` → `web_frontend/*`
 
