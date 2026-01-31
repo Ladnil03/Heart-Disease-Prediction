@@ -1,7 +1,7 @@
 // Configuration
 const API_CONFIG = {
     baseURL: window.location.origin,
-    apiKey: 'Heart_disease_api.'
+    apiKey: 'Heart_disease_api'
 };
 
 // DOM Elements

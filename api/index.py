@@ -19,7 +19,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 API_KEY_VALUE = os.getenv("API_KEY", "Heart_disease_api")
 
 if not MONGO_URI:
-    logger.warning("MONGO_URI not found in .env file. Database features will be disabled.")
+    logger.warning("MONGO_URI not found. Database features will be disabled.")
     MONGO_URI = None
 
 # App Initialization 
@@ -28,65 +28,43 @@ app = FastAPI(title="Heart Disease Prediction API")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Load ML Model with error handling
+model = None
 try:
-    # Try to load from different possible locations
-    model_paths = [
-        "heart_model.pkl",
-        "backend/heart_model.pkl", 
-        "model/heart_model.pkl",
-        "../backend/heart_model.pkl",
-        "../model/heart_model.pkl"
-    ]
-    
-    model = None
-    for path in model_paths:
-        try:
-            if os.path.exists(path):
-                model = joblib.load(path)
-                logger.info(f"Model loaded successfully from {path}")
-                break
-        except:
-            continue
-    
-    if model is None:
-        raise FileNotFoundError("Model file not found in any expected location")
-        
+    # Try to load from current directory first (Vercel deployment)
+    model_path = "heart_model.pkl"
+    if os.path.exists(model_path):
+        model = joblib.load(model_path)
+        logger.info(f"Model loaded successfully from {model_path}")
+    else:
+        raise FileNotFoundError("Model file not found")
 except Exception as e:
     logger.error(f"Error loading model: {str(e)}")
-    raise Exception(f"Error loading model: {str(e)}")
+    # Don't raise exception here, handle it in the endpoint
 
 # MongoDB connection with context manager
 @contextmanager
 def get_db_connection():
     client = None
     try:
-        client = MongoClient(MONGO_URI)
-        db = client["heart_disease_db"]
-        yield db
+        if MONGO_URI:
+            client = MongoClient(MONGO_URI)
+            db = client["heart_disease_db"]
+            yield db
+        else:
+            yield None
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database service unavailable")
+        yield None
     finally:
         if client:
             client.close()
-
-# Initialize API key in database
-if MONGO_URI:
-    try:
-        with get_db_connection() as db:
-            api_keys_col = db["api_keys"]
-            if api_keys_col.count_documents({"api_key": API_KEY_VALUE}) == 0:
-                api_keys_col.insert_one({"api_key": API_KEY_VALUE})
-                logger.info("API key initialized in database")
-    except Exception as e:
-        logger.warning(f"Could not initialize API key: {str(e)}")
 
 # Request Schema with validation
 class HeartInput(BaseModel):
@@ -104,24 +82,10 @@ class HeartInput(BaseModel):
     ca: int = Field(ge=0, le=3, description="Number of major vessels (0-3)")
     thal: int = Field(ge=1, le=3, description="Thalassemia (1-3)")
 
-# API Key Validation with error handling
+# API Key Validation
 def verify_api_key(api_key: str):
-    if not MONGO_URI:
-        # Skip database verification if no MongoDB connection
-        if api_key != API_KEY_VALUE:
-            raise HTTPException(status_code=401, detail="Invalid API Key")
-        return
-    
-    try:
-        with get_db_connection() as db:
-            api_keys_col = db["api_keys"]
-            if not api_keys_col.find_one({"api_key": api_key}):
-                raise HTTPException(status_code=401, detail="Invalid API Key")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error verifying API key: {str(e)}")
-        raise HTTPException(status_code=503, detail="Authentication service unavailable")
+    if api_key != API_KEY_VALUE:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
 
 @app.get("/")
 def read_root():
@@ -131,15 +95,18 @@ def read_root():
 def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
     verify_api_key(api_key)
 
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not available")
+
     try:
-        # Prepare input for model (all 13 features)
+        # Prepare input for model
         X = np.array([[
             data.age, data.sex, data.cp, data.trestbps, data.chol,
             data.fbs, data.restecg, data.thalach, data.exang,
             data.oldpeak, data.slope, data.ca, data.thal
         ]])
 
-        # Model prediction with error handling
+        # Model prediction
         risk_prob = model.predict_proba(X)[0][1]
 
         # Determine risk level
@@ -150,10 +117,10 @@ def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
         else:
             risk_level = "High"
 
-        # Save to MongoDB Atlas using context manager and improved data mapping
-        if MONGO_URI:
-            try:
-                with get_db_connection() as db:
+        # Save to MongoDB if available
+        try:
+            with get_db_connection() as db:
+                if db is not None:
                     predictions_col = db["predictions"]
                     prediction_data = {
                         **data.dict(),
@@ -161,9 +128,9 @@ def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
                         "risk_level": risk_level
                     }
                     predictions_col.insert_one(prediction_data)
-            except Exception as e:
-                logger.error(f"Error saving prediction to database: {str(e)}")
-                # Continue execution even if database save fails
+        except Exception as e:
+            logger.error(f"Error saving to database: {str(e)}")
+            # Continue without failing
 
         return {
             "risk_probability": round(float(risk_prob), 2),
@@ -173,3 +140,6 @@ def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
     except Exception as e:
         logger.error(f"Error during prediction: {str(e)}")
         raise HTTPException(status_code=500, detail="Prediction service error")
+
+# Vercel handler
+handler = app
