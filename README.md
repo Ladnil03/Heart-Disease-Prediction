@@ -8,7 +8,7 @@ This application predicts the risk of heart disease based on 13 medical paramete
 
 ## 🚀 Live Demo
 
-- **Frontend**: [Deployed on Vercel](https://your-vercel-url.vercel.app)
+- **Frontend**: [Deployed on Vercel](https://heart-disease-prediction-three.vercel.app/)
 - **Backend API**: [Deployed on Railway](https://heart-disease-prediction-production-7bb8.up.railway.app)
 - **Database**: MongoDB Atlas (Cloud)
 
