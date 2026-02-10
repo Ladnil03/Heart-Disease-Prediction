@@ -1,0 +1,8 @@
+env/
+backend/
+dataset/
+model/
+*.bat
+*.md
+Pipfile
+.env

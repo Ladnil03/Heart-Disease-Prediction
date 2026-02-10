@@ -28,6 +28,7 @@ wheels/
 venv/
 env/
 ENV/
+.venv/
 
 # IDE
 .vscode/
@@ -42,7 +43,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Vercel
+.vercel
 
-# Model files (optional - uncomment if you don't want to commit models)
-# *.pkl
-# *.joblib
+.vercel
+.env*.local

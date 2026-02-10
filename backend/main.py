@@ -28,7 +28,12 @@ app = FastAPI(title="Heart Disease Prediction API")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "http://localhost:8000",  # Local API
+        "https://heart-disease-prediction-zj5z.vercel.app",  # Your frontend domain
+        "*"  # Allow all origins (can be restricted in production)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -117,7 +122,7 @@ def verify_api_key(api_key: str):
 # ----------------------------------
 # Prediction Endpoint with comprehensive error handling
 # ----------------------------------
-@app.post("/predict")
+@app.post("/api/predict")
 def predict(data: HeartInput, api_key: str = Header(..., alias="api-key")):
     # amazonq-ignore-next-line
     verify_api_key(api_key)

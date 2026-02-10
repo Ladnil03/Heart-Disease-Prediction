@@ -1,30 +1,8 @@
-// Configuration - supports both local and production deployments
+// Configuration
 const API_CONFIG = {
-    // Use environment variable if available, otherwise fallback to window.location or production URL
-    baseURL: getAPIBaseURL(),
+    baseURL: window.location.origin,
     apiKey: 'Heart_disease_api'
 };
-
-// Determine API base URL based on environment
-function getAPIBaseURL() {
-    // Check for environment variable first
-    if (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) {
-        return process.env.REACT_APP_API_URL;
-    }
-    
-    // Check for window.__ENV__ (set in HTML for static deployments)
-    if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.API_URL) {
-        return window.__ENV__.API_URL;
-    }
-    
-    // Local development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://localhost:8000';
-    }
-    
-    // Production: API and frontend on same domain
-    return window.location.origin;
-}
 
 // DOM Elements
 const form = document.getElementById('predictionForm');
