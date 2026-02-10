@@ -80,6 +80,13 @@ if MONGO_URI:
         logger.warning(f"Could not initialize API key: {str(e)}")
 
 # ----------------------------------
+# Health Check Endpoint
+# ----------------------------------
+@app.get("/")
+def read_root():
+    return {"message": "Heart Disease Prediction API", "status": "running"}
+
+# ----------------------------------
 # Request Schema with validation
 # ----------------------------------
 class HeartInput(BaseModel):
