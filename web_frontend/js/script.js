@@ -12,8 +12,7 @@ function getAPIBaseURL() {
     }
     
     // Production: Railway backend URL
-    // TODO: Replace with your actual Railway URL after deployment
-    return 'https://YOUR-RAILWAY-URL.up.railway.app';
+    return 'https://heart-disease-prediction-production-7bb8.up.railway.app';
 }
 
 // DOM Elements
