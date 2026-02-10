@@ -18,9 +18,14 @@ load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 API_KEY_VALUE = os.getenv("API_KEY", "Heart_disease_api")
 
+# Debug: Print environment variables (remove in production)
+logger.info(f"MONGO_URI loaded: {'Yes' if MONGO_URI else 'No'}")
+logger.info(f"API_KEY loaded: {'Yes' if API_KEY_VALUE else 'No'}")
+
 if not MONGO_URI:
-    logger.warning("MONGO_URI not found in .env file. Database features will be disabled.")
-    MONGO_URI = None
+    logger.warning("MONGO_URI not found in environment variables")
+else:
+    logger.info("MONGO_URI found and loaded")
 
 # App Initialization 
 app = FastAPI(title="Heart Disease Prediction API")
