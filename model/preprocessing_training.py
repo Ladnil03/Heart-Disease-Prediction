@@ -9,7 +9,6 @@ import os
 # STEP 1: Load Cleaned Dataset with error handling
 # -------------------------------
 try:
-    # amazonq-ignore-next-line
     df = pd.read_csv("../dataset/cleaned_heart.csv")
     print(f"Dataset loaded successfully. Shape: {df.shape}")
 except FileNotFoundError:
@@ -55,8 +54,6 @@ xgb_model = XGBClassifier(
 xgb_model.fit(X_train, y_train)
 y_pred = xgb_model.predict(X_test)
 
-# amazonq-ignore-next-line
-# amazonq-ignore-next-line
 results = {
     "Model": "XGBoost",
     "Accuracy": accuracy_score(y_test, y_pred),
