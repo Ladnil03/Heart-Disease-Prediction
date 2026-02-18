@@ -56,26 +56,48 @@
                 </div>
                 <div class="hero-image">
                     <div class="heart-visualization">
-                        <div class="heart-monitor">
-                            <div class="ecg-line"></div>
-                            <div class="heart-icon-container">
-                                <i class="fas fa-heartbeat"></i>
-                            </div>
-                            <div class="medical-stats">
-                                <div class="stat-item">
-                                    <i class="fas fa-stethoscope"></i>
-                                    <span>Clinical Analysis</span>
-                                </div>
-                                <div class="stat-item">
-                                    <i class="fas fa-chart-line"></i>
-                                    <span>Risk Assessment</span>
-                                </div>
-                                <div class="stat-item">
-                                    <i class="fas fa-shield-virus"></i>
-                                    <span>Disease Prediction</span>
-                                </div>
-                            </div>
+                        <!-- The Video -->
+                        <video id="heroVideo" class="hero-video" autoplay loop muted playsinline preload="auto">
+                            <source src="assets/Video_Generation_Complete.mp4" type="video/mp4">
+                        </video>
+
+                        <!-- Gradient overlay for depth -->
+                        <div class="video-overlay"></div>
+
+                        <!-- Animated ECG line across the bottom -->
+                        <div class="video-ecg-bar">
+                            <svg class="ecg-svg" viewBox="0 0 400 60" preserveAspectRatio="none">
+                                <polyline class="ecg-path"
+                                    points="0,30 40,30 50,30 55,5 60,55 65,30 80,30 90,30 95,10 100,50 105,30 120,30 160,30 165,5 170,55 175,30 190,30 200,30 205,10 210,50 215,30 230,30 270,30 275,5 280,55 285,30 300,30 310,30 315,10 320,50 325,30 340,30 400,30" />
+                            </svg>
                         </div>
+
+                        <!-- LIVE badge top-left -->
+                        <div class="video-badge-live">
+                            <span class="live-dot"></span> LIVE AI
+                        </div>
+
+                        <!-- Floating info chips -->
+                        <div class="video-chip chip-1">
+                            <i class="fas fa-brain"></i> AI Analysis
+                        </div>
+                        <div class="video-chip chip-2">
+                            <i class="fas fa-shield-alt"></i> 86% Accuracy
+                        </div>
+                        <div class="video-chip chip-3">
+                            <i class="fas fa-bolt"></i> Real-Time
+                        </div>
+
+                        <!-- Animated corner pulse rings -->
+                        <div class="corner-pulse top-right"></div>
+                        <div class="corner-pulse bottom-left"></div>
+
+                        <!-- Floating particles -->
+                        <div class="vp vp1"></div>
+                        <div class="vp vp2"></div>
+                        <div class="vp vp3"></div>
+                        <div class="vp vp4"></div>
+                        <div class="vp vp5"></div>
                     </div>
                 </div>
             </div>
