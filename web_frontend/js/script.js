@@ -10,7 +10,7 @@ function getAPIBaseURL() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:8000';
     }
-    
+
     // Production: Railway backend URL
     return 'https://heart-disease-prediction-production-7bb8.up.railway.app';
 }
@@ -24,26 +24,26 @@ const resultContent = document.getElementById('resultContent');
 // Form submission handler
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     try {
         // Show loading
         showLoading();
-        
+
         // Collect form data
         const formData = collectFormData();
-        
+
         // Validate form data
         if (!validateFormData(formData)) {
             hideLoading();
             return;
         }
-        
+
         // Make API call
         const result = await makePrediction(formData);
-        
+
         // Display results
         displayResults(result);
-        
+
     } catch (error) {
         console.error('Prediction error:', error);
         showError(error.message);
@@ -56,7 +56,7 @@ form.addEventListener('submit', async (e) => {
 function collectFormData() {
     const formData = new FormData(form);
     const data = {};
-    
+
     // Convert form data to object with proper types
     for (let [key, value] of formData.entries()) {
         if (key === 'oldpeak') {
@@ -65,7 +65,7 @@ function collectFormData() {
             data[key] = parseInt(value);
         }
     }
-    
+
     return data;
 }
 
@@ -86,7 +86,7 @@ function validateFormData(data) {
         ca: { min: 0, max: 3 },
         thal: { min: 1, max: 3 }
     };
-    
+
     for (let [field, rules] of Object.entries(validations)) {
         const value = data[field];
         if (value < rules.min || value > rules.max) {
@@ -94,7 +94,7 @@ function validateFormData(data) {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -108,19 +108,19 @@ async function makePrediction(data) {
         },
         body: JSON.stringify(data)
     });
-    
+
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
 }
 
 // Display prediction results
 function displayResults(result) {
     const { risk_probability, risk_level } = result;
-    
+
     // Create result HTML
     const resultHTML = `
         <div class="risk-level risk-${risk_level.toLowerCase()}">
@@ -132,19 +132,22 @@ function displayResults(result) {
         </div>
         
         <div class="risk-probability">
-            <div class="probability-circle" style="background: conic-gradient(from 0deg, ${getRiskColor(risk_level)} ${risk_probability * 360}deg, #ecf0f1 0deg)">
-                ${Math.round(risk_probability * 100)}%
+            <div class="probability-circle" style="background: conic-gradient(from 0deg, ${getRiskColor(risk_level)} ${risk_probability * 360}deg, #e8f0fe ${risk_probability * 360}deg)">
+                <div class="percent-value">
+                    <span>${Math.round(risk_probability * 100)}%</span>
+                    <small>RISK</small>
+                </div>
             </div>
             <div class="probability-text">
                 <strong>Risk Probability</strong><br>
-                ${getRecommendation(risk_level)}
+                <span style="color: var(--text-gray); font-size: 0.95rem;">${getRecommendation(risk_level)}</span>
             </div>
         </div>
     `;
-    
+
     resultContent.innerHTML = resultHTML;
     resultSection.classList.remove('hidden');
-    
+
     // Smooth scroll to results
     resultSection.scrollIntoView({ behavior: 'smooth' });
 }
@@ -203,7 +206,7 @@ function showError(message) {
             </button>
         </div>
     `;
-    
+
     // Add error styles if not already added
     if (!document.querySelector('#errorStyles')) {
         const errorStyles = document.createElement('style');
@@ -245,9 +248,9 @@ function showError(message) {
         `;
         document.head.appendChild(errorStyles);
     }
-    
+
     document.body.appendChild(errorDiv);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (errorDiv.parentElement) {
@@ -258,10 +261,10 @@ function showError(message) {
 
 // Form validation on input change
 document.querySelectorAll('input, select').forEach(input => {
-    input.addEventListener('change', function() {
+    input.addEventListener('change', function () {
         // Remove any existing error styling
         this.classList.remove('error');
-        
+
         // Basic validation
         if (this.hasAttribute('required') && !this.value) {
             this.classList.add('error');
@@ -281,12 +284,12 @@ errorInputStyles.textContent = `
 document.head.appendChild(errorInputStyles);
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('Heart Disease Prediction App Initialized');
-    
+
     // Hide result section initially
     resultSection.classList.add('hidden');
-    
+
     // Test API connection on page load
     testAPIConnection();
 });
