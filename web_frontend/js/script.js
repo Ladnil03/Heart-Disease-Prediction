@@ -119,7 +119,7 @@ async function makePrediction(data) {
 
 // Display prediction results
 function displayResults(result) {
-    const { risk_probability, risk_level } = result;
+    const { risk_probability, risk_level, shap_values, top_risk_factors, base_value } = result;
 
     // Create result HTML
     const resultHTML = `
@@ -130,7 +130,6 @@ function displayResults(result) {
                 <p>Based on the provided medical parameters</p>
             </div>
         </div>
-        
         <div class="risk-probability">
             <div class="probability-circle" style="background: conic-gradient(from 0deg, ${getRiskColor(risk_level)} ${risk_probability * 360}deg, #e8f0fe ${risk_probability * 360}deg)">
                 <div class="percent-value">
@@ -148,8 +147,156 @@ function displayResults(result) {
     resultContent.innerHTML = resultHTML;
     resultSection.classList.remove('hidden');
 
+    // SHAP Feature Importance
+    if (shap_values && typeof shap_values === 'object') {
+        renderShapBarChart(shap_values);
+        renderTopRiskFactors(top_risk_factors, shap_values);
+        document.getElementById('featureImportanceSection').classList.remove('hidden');
+        // Show Download Report button
+        document.getElementById('downloadReportBtn').classList.remove('hidden');
+        // Attach handler for PDF download
+        setupDownloadReportBtn(result);
+    } else {
+        document.getElementById('featureImportanceSection').classList.add('hidden');
+        document.getElementById('downloadReportBtn').classList.add('hidden');
+    }
+
     // Smooth scroll to results
     resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Setup Download Report button handler
+function setupDownloadReportBtn(result) {
+    const btn = document.getElementById('downloadReportBtn');
+    btn.onclick = async function () {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Report...';
+        try {
+            // Collect form data again for full input
+            const formData = collectFormData();
+            // Build report payload
+            const payload = {
+                ...formData,
+                risk_probability: result.risk_probability,
+                risk_level: result.risk_level,
+                shap_values: result.shap_values,
+                top_risk_factors: result.top_risk_factors,
+                base_value: result.base_value
+            };
+            const response = await fetch(`${API_CONFIG.baseURL}/api/report`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': API_CONFIG.apiKey
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Failed to generate PDF report');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Heart_Disease_Report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            showError('PDF report generation failed.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-download"></i> Download Report (PDF)';
+        }
+    };
+}
+
+// Render SHAP bar chart
+function renderShapBarChart(shapValues) {
+    const ctx = document.getElementById('shapBarChart').getContext('2d');
+    const featureNames = Object.keys(shapValues);
+    const values = featureNames.map(f => shapValues[f]);
+    const barColors = values.map(v => v >= 0 ? '#e74c3c' : '#27ae60'); // Red for risk-increasing, green for decreasing
+
+    // Destroy previous chart if exists
+    if (window.shapChart) window.shapChart.destroy();
+
+    window.shapChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: featureNames,
+            datasets: [{
+                label: 'SHAP Value',
+                data: values,
+                backgroundColor: barColors
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    title: { display: true, text: 'SHAP Value' }
+                },
+                y: {
+                    title: { display: true, text: 'Feature' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.dataset.label}: ${context.parsed.x.toFixed(2)}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render top risk factors explanations
+function renderTopRiskFactors(topFactors, shapValues) {
+    const factorLabels = {
+        age: 'Your Age',
+        sex: 'Sex',
+        cp: 'Chest Pain Type',
+        trestbps: 'Resting Blood Pressure',
+        chol: 'Cholesterol Level',
+        fbs: 'Fasting Blood Sugar',
+        restecg: 'Resting ECG',
+        thalach: 'Maximum Heart Rate',
+        exang: 'Exercise Induced Angina',
+        oldpeak: 'ST Depression',
+        slope: 'ST Segment Slope',
+        ca: 'Major Vessels',
+        thal: 'Thalassemia'
+    };
+    const interpretations = {
+        age: 'Older age increases risk.',
+        sex: 'Male sex increases risk.',
+        cp: 'Certain chest pain types increase risk.',
+        trestbps: 'Higher resting blood pressure increases risk.',
+        chol: 'Higher cholesterol increases risk.',
+        fbs: 'High fasting blood sugar increases risk.',
+        restecg: 'Abnormal ECG increases risk.',
+        thalach: 'Lower maximum heart rate increases risk.',
+        exang: 'Exercise-induced angina increases risk.',
+        oldpeak: 'Greater ST depression increases risk.',
+        slope: 'Flat or downsloping ST segment increases risk.',
+        ca: 'More major vessels increases risk.',
+        thal: 'Certain thalassemia types increase risk.'
+    };
+    const top3 = topFactors.slice(0, 3);
+    let html = '<h5>Top Risk Factors</h5><ul>';
+    top3.forEach(f => {
+        const label = factorLabels[f] || f;
+        const interpretation = interpretations[f] || '';
+        const shapVal = shapValues[f];
+        const effect = shapVal >= 0 ? 'increasing' : 'decreasing';
+        html += `<li><strong>${label}</strong>: ${interpretation} <span style="color:${effect === 'increasing' ? '#e74c3c' : '#27ae60'}">(${effect} your risk)</span></li>`;
+    });
+    html += '</ul>';
+    document.getElementById('topRiskFactors').innerHTML = html;
 }
 
 // Get risk icon based on level
@@ -297,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Test API connection
 async function testAPIConnection() {
     try {
-        const response = await fetch(`${API_CONFIG.baseURL}/api/`, {
+        const response = await fetch(`${API_CONFIG.baseURL}/`, {
             method: 'GET'
         });
         console.log('API connection test completed');

@@ -9,7 +9,7 @@ import os
 # STEP 1: Load Cleaned Dataset with error handling
 # -------------------------------
 try:
-    df = pd.read_csv("../dataset/cleaned_heart.csv")
+    df = pd.read_csv("../dataset/heart.csv")
     print(f"Dataset loaded successfully. Shape: {df.shape}")
 except FileNotFoundError:
     print("Error: Dataset file '../dataset/cleaned_heart.csv' not found.")

@@ -1,9 +1,14 @@
 /* ==========================================
    HEARTCARE AI - CLINICAL WEBSITE DESIGN
    Modern Medical Aesthetic with Animations
+   ------------------------------------------
+   Design tokens  → variables.css
+   Animations     → animations.css
+   Layout & comps → this file
    ========================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('variables.css');
+@import url('animations.css');
 
 :root {
     /* Clinical Color Palette */

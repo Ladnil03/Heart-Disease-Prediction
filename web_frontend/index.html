@@ -273,6 +273,15 @@
                     <div id="resultContent" class="result-content">
                         <!-- Results will be populated here -->
                     </div>
+                    <!-- SHAP Feature Importance Section -->
+                    <div id="featureImportanceSection" class="feature-importance-section hidden">
+                        <h4><i class="fas fa-lightbulb"></i> Feature Importance (Explainable AI)</h4>
+                        <canvas id="shapBarChart" width="600" height="300"></canvas>
+                        <div id="topRiskFactors" class="top-risk-factors"></div>
+                        <button id="downloadReportBtn" class="download-report-btn hidden" style="margin-top: 20px;">
+                            <i class="fas fa-file-download"></i> Download Report (PDF)
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -316,13 +325,22 @@
     </div>
 
     <script>
-        // Configuration for API endpoint - set before loading script.js
+        // Configuration for API endpoint - set before loading modules
         window.__ENV__ = {
             // Replace with your actual API Vercel domain
             API_URL: 'https://your-api-domain.vercel.app'
         };
     </script>
-    <script src="js/script.js"></script>
+    <!-- Chart.js (must load before chart.js module) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Modular JS files loaded in dependency order -->
+    <script src="js/config.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/results.js"></script>
+    <script src="js/app.js"></script>
 </body>
 
 </html>

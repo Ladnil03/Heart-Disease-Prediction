@@ -1,0 +1,25 @@
+/* ==========================================
+   CSS Variables & Design Tokens
+   All colours, gradients, fonts, and shadows
+   are defined here as the single source of truth.
+   ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    /* Clinical Color Palette */
+    --primary-medical-blue: #0066CC;
+    --secondary-medical-blue: #4A90E2;
+    --accent-teal: #00B4D8;
+    --clinical-white: #FFFFFF;
+    --clinical-gray: #F8F9FA;
+    --medical-red: #DC3545;
+    --success-green: #28A745;
+    --warning-orange: #FD7E14;
+    --text-dark: #2C3E50;
+    --text-gray: #6C757D;
+    --shadow-light: rgba(0, 102, 204, 0.1);
+    --shadow-medium: rgba(0, 102, 204, 0.2);
+    --gradient-medical: linear-gradient(135deg, #0066CC 0%, #00B4D8 100%);
+    --gradient-hero: linear-gradient(135deg, #E8F4F8 0%, #FFFFFF 100%);
+}
