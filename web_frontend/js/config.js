@@ -25,5 +25,5 @@ function getAPIBaseURL() {
     }
 
     // Production: Railway backend URL
-    return 'https://heart-disease-prediction-production-7bb8.up.railway.app';
+    return 'https://heart-disease-prediction-h2kn.onrender.com/';
 }
