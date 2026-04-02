@@ -5,37 +5,62 @@ Handles loading the trained model from disk and running predictions.
 Keeping model I/O isolated here makes it easy to swap models or
 add versioning later.
 """
+# Fixes: FIX-8 (corrupted model handling), FIX-9 (NaN/Inf guard in prepare_input)
 
+import os
+import pickle
 import joblib
 import numpy as np
 from config import MODEL_PATH, RISK_THRESHOLDS, FEATURE_NAMES, logger
 
 
 def load_model():
-    """Load the pickled ML model. Raises on failure so the app refuses to start."""
+    """
+    Load the pickled ML model.
+
+    Raises
+    ------
+    FileNotFoundError
+        When the model file does not exist on disk.
+    RuntimeError
+        When the file exists but is corrupted / incompatible, or when the
+        loaded object is not a valid scikit-learn classifier.
+    """
+    path = MODEL_PATH
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Model file '{path}' not found. Run model/preprocessing_training.py first."
+        )
     try:
         # amazonq-ignore-next-line
-        model = joblib.load(MODEL_PATH)
-        logger.info("Model loaded successfully")
-        return model
-    except FileNotFoundError:
-        logger.error(f"Model file '{MODEL_PATH}' not found")
-        raise FileNotFoundError(
-            f"Model file '{MODEL_PATH}' not found. "
-            "Please ensure the model is trained and saved."
-        )
+        model = joblib.load(path)
+    except (pickle.UnpicklingError, EOFError, ValueError) as e:
+        raise RuntimeError(
+            f"Model file '{path}' is corrupted or incompatible: {e}"
+        ) from e
     except Exception as e:
-        logger.error(f"Error loading model: {str(e)}")
-        raise
+        raise RuntimeError(f"Unexpected error loading model: {e}") from e
+
+    # Smoke-test: confirm the model has predict_proba
+    if not hasattr(model, "predict_proba"):
+        raise RuntimeError(
+            f"Loaded object from '{path}' is not a valid classifier "
+            "(missing predict_proba)."
+        )
+    logger.info(f"Model loaded successfully from '{path}'")
+    return model
 
 
 def prepare_input(data) -> np.ndarray:
     """Convert a HeartInput schema instance into a numpy array for the model."""
-    return np.array([[
+    arr = np.array([[
         data.age, data.sex, data.cp, data.trestbps, data.chol,
         data.fbs, data.restecg, data.thalach, data.exang,
         data.oldpeak, data.slope, data.ca, data.thal,
-    ]])
+    ]], dtype=np.float64)
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("Input contains NaN or Inf values after conversion")
+    return arr
 
 
 def classify_risk(probability: float) -> str:

@@ -4,8 +4,10 @@ Pydantic request/response schemas.
 Defines the data shapes accepted and returned by each endpoint,
 with field-level validation constraints.
 """
+# Fixes: FIX-9 (NaN/Inf input guard)
 
-from pydantic import BaseModel, Field
+import math
+from pydantic import BaseModel, Field, field_validator
 
 
 class HeartInput(BaseModel):
@@ -24,6 +26,18 @@ class HeartInput(BaseModel):
     slope: int = Field(ge=0, le=2, description="Slope of peak exercise ST segment (0-2)")
     ca: int = Field(ge=0, le=3, description="Number of major vessels (0-3)")
     thal: int = Field(ge=1, le=3, description="Thalassemia (1-3)")
+
+    @field_validator("oldpeak", mode="before")
+    @classmethod
+    def reject_nan_inf(cls, v):
+        """Reject NaN and Inf values for oldpeak (float field)."""
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            raise ValueError("oldpeak must be a valid number")
+        if math.isnan(f) or math.isinf(f):
+            raise ValueError("oldpeak must not be NaN or Inf")
+        return f
 
 
 class ReportRequest(BaseModel):

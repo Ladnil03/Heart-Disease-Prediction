@@ -1,14 +1,31 @@
 /**
  * config.js — API configuration
  *
- * Centralises the API base URL and API key so they are defined in
- * one place and can be overridden via window.__ENV__ if needed.
+ * Centralises the API base URL. The API key is no longer hardcoded;
+ * instead, initAPIKey() fetches a short-lived signed token from the
+ * backend's GET /api/token endpoint on page load.
  */
+// Fixes: FIX-1 (remove hardcoded key, fetch token instead), FIX-2 (no script.js reference)
 
 const API_CONFIG = {
     baseURL: getAPIBaseURL(),
-    apiKey: 'Heart_disease_api',
+    apiKey: null,          // populated by initAPIKey()
 };
+
+/**
+ * Fetch a short-lived signed token from the backend and store it in
+ * API_CONFIG.apiKey. Must be awaited before the first API call.
+ */
+async function initAPIKey() {
+    try {
+        const res = await fetch(`${API_CONFIG.baseURL}/api/token`);
+        if (!res.ok) throw new Error(`token fetch failed: ${res.status}`);
+        const { token } = await res.json();
+        API_CONFIG.apiKey = token;
+    } catch (e) {
+        console.error('Could not retrieve API token:', e);
+    }
+}
 
 /**
  * Determine the correct API base URL based on the current hostname.
@@ -24,6 +41,6 @@ function getAPIBaseURL() {
         return 'http://localhost:8000';
     }
 
-    // Production: Railway backend URL
+    // Production: Render backend URL
     return 'https://heart-disease-prediction-h2kn.onrender.com';
 }

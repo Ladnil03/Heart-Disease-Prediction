@@ -4,9 +4,11 @@ Configuration module for the Heart Disease Prediction API.
 Centralizes all environment variables, constants, and configuration values
 so they are defined in one place and easily adjustable.
 """
+# Fixes: FIX-1 (token secret), FIX-3 (CORS hardening)
 
 import os
 import logging
+import secrets
 from dotenv import load_dotenv
 
 # ------------------------------------
@@ -23,6 +25,14 @@ load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 API_KEY_VALUE = os.getenv("API_KEY", "Heart_disease_api")
 
+# Secret used to sign short-lived browser tokens (FIX-1).
+# Falls back to a random value per process — set TOKEN_SECRET in env for
+# stability across restarts.
+TOKEN_SECRET: str = os.getenv("TOKEN_SECRET", secrets.token_hex(32))
+
+# Token TTL in seconds (default 15 minutes)
+TOKEN_TTL: int = int(os.getenv("TOKEN_TTL", "900"))
+
 # ------------------------------------
 # Application Settings
 # ------------------------------------
@@ -36,13 +46,26 @@ DB_NAME = "heart_disease_db"
 PREDICTIONS_COLLECTION = "predictions"
 API_KEYS_COLLECTION = "api_keys"
 
-# CORS origins
+# ------------------------------------
+# CORS origins (FIX-3)
+# ------------------------------------
+# Wildcard "*" is DISABLED in production because it bypasses
+# preflight credential checks and exposes the API to CSRF-style attacks.
+# Enable only for local development via ALLOW_ALL_ORIGINS=true.
+_ALLOW_ALL_ORIGINS: bool = os.getenv("ALLOW_ALL_ORIGINS", "false").lower() == "true"
+
 CORS_ORIGINS = [
+    # ── Local development ──────────────────────────────────────────────
     "http://localhost:3000",
     "http://localhost:8000",
-    "https://heart-disease-prediction-zj5z.vercel.app",
-    "*",
+    "http://127.0.0.1:5500",      # VS Code Live Server
+    "http://localhost:5500",
+    # ── Production (exact URLs — CORSMiddleware does NOT support wildcards) ──
+    "https://heart-disease-prediction-zj5z.vercel.app",   # frontend on Vercel
 ]
+
+if _ALLOW_ALL_ORIGINS:
+    CORS_ORIGINS.append("*")
 
 # Risk level thresholds
 RISK_THRESHOLDS = {
@@ -102,3 +125,4 @@ RISK_COLORS = {
 # ------------------------------------
 logger.info(f"MONGO_URI loaded: {'Yes' if MONGO_URI else 'No'}")
 logger.info(f"API_KEY loaded: {'Yes' if API_KEY_VALUE else 'No'}")
+logger.info(f"ALLOW_ALL_ORIGINS: {_ALLOW_ALL_ORIGINS}")

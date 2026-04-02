@@ -5,12 +5,16 @@
  * All logic is delegated to the other modules (config, validation,
  * api, ui, chart, results).
  */
+// Fixes: FIX-1 (await initAPIKey() before attaching form handler)
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('Heart Disease Prediction App Initialized');
 
     // Initialise UI helpers (caches DOM refs, injects styles)
     initUI();
+
+    // Fetch signed token before any API call (FIX-1)
+    await initAPIKey();
 
     const form = document.getElementById('predictionForm');
     const resultSection = document.getElementById('resultSection');

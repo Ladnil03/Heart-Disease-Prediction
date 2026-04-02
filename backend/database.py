@@ -1,29 +1,54 @@
 """
 Database module for MongoDB connection management.
 
-Provides a context manager for safe, reusable database connections
-and a helper to initialise seed data (e.g. API keys) on startup.
+Provides a module-level singleton connection pool and a context manager
+for safe, reusable database connections. Also seeds initial API key data.
 """
+# Fixes: FIX-7 (connection pool singleton)
 
 from contextlib import contextmanager
 from pymongo import MongoClient
 from config import MONGO_URI, DB_NAME, API_KEYS_COLLECTION, API_KEY_VALUE, logger
 
+# ------------------------------------
+# Module-level singleton client
+# ------------------------------------
+_client: MongoClient | None = None
+
+
+def get_client() -> MongoClient | None:
+    """Return (and lazily create) the shared MongoClient connection pool."""
+    global _client
+    if _client is None and MONGO_URI:
+        _client = MongoClient(
+            MONGO_URI,
+            maxPoolSize=10,
+            serverSelectionTimeoutMS=5000,
+        )
+        logger.info("MongoDB connection pool created")
+    return _client
+
+
+def close_client() -> None:
+    """Close the shared MongoClient (called on FastAPI shutdown)."""
+    global _client
+    if _client is not None:
+        _client.close()
+        _client = None
+        logger.info("MongoDB connection pool closed")
+
 
 @contextmanager
 def get_db_connection():
-    """Yield a MongoDB database handle, ensuring the client is closed afterwards."""
-    client = None
+    """Yield a MongoDB database handle from the shared pool."""
+    client = get_client()
+    if client is None:
+        raise RuntimeError("No MongoDB URI configured")
     try:
-        client = MongoClient(MONGO_URI)
-        db = client[DB_NAME]
-        yield db
+        yield client[DB_NAME]
     except Exception as e:
-        logger.error(f"Database connection error: {str(e)}")
+        logger.error(f"Database error: {e}")
         raise
-    finally:
-        if client:
-            client.close()
 
 
 def init_api_key():
