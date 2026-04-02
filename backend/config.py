@@ -61,7 +61,7 @@ CORS_ORIGINS = [
     "http://127.0.0.1:5500",      # VS Code Live Server
     "http://localhost:5500",
     # ── Production (exact URLs — CORSMiddleware does NOT support wildcards) ──
-    "https://heart-disease-prediction-zj5z.vercel.app",   # frontend on Vercel
+    "https://heart-disease-prediction-three.vercel.app",  # frontend on Vercel
 ]
 
 if _ALLOW_ALL_ORIGINS:
