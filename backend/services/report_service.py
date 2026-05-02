@@ -5,7 +5,6 @@ Builds a professional Heart Disease Risk Assessment PDF using ReportLab.
 Separated from the route handler so the report layout can evolve
 independently of the API wiring.
 """
-# Fixes: FIX-4 (page-break logic), FIX-10 (long-text truncation)
 
 import datetime
 from io import BytesIO

@@ -4,7 +4,7 @@ Configuration module for the Heart Disease Prediction API.
 Centralizes all environment variables, constants, and configuration values
 so they are defined in one place and easily adjustable.
 """
-# Fixes: FIX-1 (token secret), FIX-3 (CORS hardening)
+
 
 import os
 import logging

@@ -4,7 +4,6 @@ SHAP Explainability service.
 Computes SHAP values for a given prediction so users can understand
 which features most influenced their risk assessment.
 """
-# Fixes: FIX-5 (SHAP format robustness), FIX-6 (cache TreeExplainer)
 
 import shap
 import numpy as np

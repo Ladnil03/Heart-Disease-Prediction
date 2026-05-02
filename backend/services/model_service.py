@@ -5,7 +5,6 @@ Handles loading the trained model from disk and running predictions.
 Keeping model I/O isolated here makes it easy to swap models or
 add versioning later.
 """
-# Fixes: FIX-8 (corrupted model handling), FIX-9 (NaN/Inf guard in prepare_input)
 
 import os
 import pickle

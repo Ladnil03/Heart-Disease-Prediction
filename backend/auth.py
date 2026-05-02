@@ -5,7 +5,6 @@ Verifies an incoming API key against the database (or falls back
 to a simple env-var comparison when MongoDB is unavailable).
 Also accepts short-lived signed tokens issued by GET /api/token.
 """
-# Fixes: FIX-1 (accept signed browser tokens in verify_api_key)
 
 import hmac
 import time
@@ -14,9 +13,7 @@ from database import get_db_connection
 from config import MONGO_URI, API_KEY_VALUE, API_KEYS_COLLECTION, TOKEN_SECRET, TOKEN_TTL, logger
 
 
-# ---------------------------------------------------------------------------
-# Token helpers (FIX-1)
-# ---------------------------------------------------------------------------
+ 
 
 def _sign(payload: str) -> str:
     """Return an HMAC-SHA256 hex digest of *payload* using TOKEN_SECRET."""

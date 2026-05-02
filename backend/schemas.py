@@ -4,7 +4,6 @@ Pydantic request/response schemas.
 Defines the data shapes accepted and returned by each endpoint,
 with field-level validation constraints.
 """
-# Fixes: FIX-9 (NaN/Inf input guard)
 
 import math
 from pydantic import BaseModel, Field, field_validator

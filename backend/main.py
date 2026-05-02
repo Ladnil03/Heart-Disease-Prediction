@@ -5,8 +5,6 @@ This file is intentionally kept slim — it wires together middleware,
 routes, and startup tasks. All business logic lives in /services,
 all route handlers in /routes, and all config in config.py.
 """
-# Fixes: FIX-1 (GET /api/token endpoint), FIX-3 (CORS origins from config),
-#        FIX-7 (DB shutdown handler), FIX-8 (critical startup error + sys.exit)
 
 import sys
 from fastapi import FastAPI, Request
@@ -54,9 +52,7 @@ app.include_router(predict.router)
 app.include_router(report.router)
 
 
-# ------------------------------------
-# Token endpoint (FIX-1)
-# ------------------------------------
+
 @app.get("/api/token", tags=["Auth"])
 async def get_token(request: Request):
     """
@@ -69,9 +65,6 @@ async def get_token(request: Request):
     return {"token": token}
 
 
-# ------------------------------------
-# Shutdown: close DB pool (FIX-7)
-# ------------------------------------
 @app.on_event("shutdown")
 def shutdown_db():
     close_client()
